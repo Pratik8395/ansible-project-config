@@ -1,0 +1,55 @@
+--- #mytarget.yaml file
+- hosts: test-1
+  user: admin
+  become: yes
+  gather_facts: yes
+  connection: ssh
+
+
+  tasks:
+    - name: Install the OpenJDK 11 package
+      package:
+        name: java-11-amazon-corretto.x86_64
+        state: present
+
+    - name: install git 
+      package:
+        name: git
+        state: present
+
+    - name: install docker
+      package:
+        name: docker
+        state: present
+
+    - name: Start the Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to the Docker group
+      user:
+        name: "admin"
+        groups: docker
+        append: yes
+
+
+    - name: Download Docker Compose binary
+      shell: "curl -SL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose"
+      
+    - name: Create a symbolic link
+      file:
+        src: /usr/local/bin/docker-compose
+        dest: /usr/bin/docker-compose
+        state: link
+
+    - name: Set permissions
+      file:
+        path: /usr/local/bin/docker-compose
+        mode: '0777'
+
+    - name: Set permissions for symbolic link
+      file:
+        path: /usr/bin/docker-compose
+        mode: '0777'
